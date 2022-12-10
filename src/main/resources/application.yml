@@ -1,0 +1,14 @@
+server:
+  port: 9090
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+  datasource:
+    url: jdbc:postgresql://localhost:5432/lpic
+    username: postgres
+    password: docker
+  sql:
+    init:
+      mode: always
+      platform: postgres
