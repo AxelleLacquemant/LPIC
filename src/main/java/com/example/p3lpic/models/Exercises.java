@@ -19,8 +19,10 @@ public class Exercises {
     @Id
     @Column(name = "name", nullable = false)
     private String name;
+
     @Column(name = "score")
     private int score;
+
     @Column(name = "date")
     private Date date;
 }

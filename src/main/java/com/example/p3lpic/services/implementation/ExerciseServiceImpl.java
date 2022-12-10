@@ -1,15 +1,14 @@
 package com.example.p3lpic.services.implementation;
 
+import com.example.p3lpic.DTO.ExerciseDTO;
 import com.example.p3lpic.models.Exercises;
 import com.example.p3lpic.models.Users;
 import com.example.p3lpic.repositories.ExercisesRepository;
 import com.example.p3lpic.repositories.UserRepository;
 import com.example.p3lpic.services.ExerciseServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,8 +17,6 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -63,7 +60,7 @@ public class ExerciseServiceImpl implements ExerciseServiceInterface {
                     //TODO: script
                     //Runtime.getRuntime().exec("commande pour run le python");
                 } else {
-                    deleteTheBastard(fileName);
+                    deleteUnauthorizedFile(fileName);
                 }
             } else if(Objects.equals(fileName.split("\\.")[1], "c")) {
                 if(Objects.equals(fileName, "c-exercise1") |
@@ -73,10 +70,10 @@ public class ExerciseServiceImpl implements ExerciseServiceInterface {
                     //TODO: script
                     //Runtime.getRuntime().exec("commande pour run le c");
                 } else {
-                    deleteTheBastard(fileName);
+                    deleteUnauthorizedFile(fileName);
                 }
             } else {
-                deleteTheBastard(fileName);
+                deleteUnauthorizedFile(fileName);
             }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -102,17 +99,17 @@ public class ExerciseServiceImpl implements ExerciseServiceInterface {
     }
 
     void updateUserGrades(String file, boolean result){
-        Users loggedInUser = userRepository.findByEmail(SecurityContextHolder.getContext().getAuthentication().getName());
-        Date date = new Date();
-        Exercises exercise = new Exercises(file, result? 0:1, date);
+        Users loggedInUser = getLoggedInUser();
+        Exercises exercise = new Exercises(file+"_"+loggedInUser.getId(), result?1:0, new Date());
 
-        loggedInUser.getGrades().add(exercise);
-
-        exercisesRepository.save(exercise);
+        if(!exercisesRepository.existsById(exercise.getName())){
+            exercisesRepository.save(exercise);
+            loggedInUser.getGrades().add(exercise);
+        }
         userRepository.save(loggedInUser);
     }
 
-    void deleteTheBastard(String fileName){
+    void deleteUnauthorizedFile(String fileName){
         try {
             Files.deleteIfExists(
                     Paths.get(PATH+fileName));
@@ -131,5 +128,18 @@ public class ExerciseServiceImpl implements ExerciseServiceInterface {
             System.out.println("Directory already exists");
             return userDir;
         }
+    }
+
+    @Override
+    public List<ExerciseDTO> getExercises(){
+        List<ExerciseDTO> list = new ArrayList<>();
+        getLoggedInUser().getGrades().stream().forEach(e -> list.add(new ExerciseDTO(e.getName(), e.getScore(), e.getDate())));
+        System.out.println(list);
+        return list;
+    }
+
+    @Override
+    public Users getLoggedInUser(){
+        return userRepository.findByEmail(SecurityContextHolder.getContext().getAuthentication().getName());
     }
 }

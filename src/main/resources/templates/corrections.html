@@ -5,6 +5,24 @@
     <title>Title</title>
 </head>
 <body>
-
+    <p>
+        Notes de <span th:text="${loggedInUser.email}"></span>
+    </p>
+    <table>
+        <thead>
+        <tr>
+            <th> Exercise </th>
+            <th> Grade </th>
+            <th> Date </th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="grade : ${grades}">
+            <td><span th:text="${grade.name}"> Exercise </span></td>
+            <td><span th:text="${grade.score}? 'Success':'Failure'"> Grade </span></td>
+            <td><span th:text="${grade.date}"> Date </span></td>
+        </tr>
+        </tbody>
+    </table>
 </body>
 </html>
